@@ -481,6 +481,35 @@ function! copilot#TextQueuedForInsertion() abort
   endtry
 endfunction
 
+function! copilot#AcceptLine(...) abort
+  let s = copilot#GetDisplayedSuggestion()
+  if !empty(s.text)
+    let first_line = split(s.text, '\n')[0]
+    unlet! b:_copilot
+    call copilot#Request('notifyAccepted', {'uuid': s.uuid})
+    unlet! s:uuid
+    call s:ClearPreview()
+    let s:suggestion_text = first_line
+    return repeat("\<Left>\<Del>", s.outdentSize) . repeat("\<Del>", s.deleteSize) .
+            \ "\<C-R>\<C-O>=" . string(escape(first_line, '\"')) . "\<CR>\<CR>"
+  endif
+  let default = get(g:, 'copilot_tab_fallback', pumvisible() ? "\<C-N>" : "\t")
+  if !a:0
+    return default
+  elseif type(a:1) == v:t_string
+    return a:1
+  elseif type(a:1) == v:t_func
+    try
+      return call(a:1, [])
+    catch
+      call copilot#logger#Exception()
+      return default
+    endtry
+  else
+    return default
+  endif
+endfunction
+
 function! copilot#Accept(...) abort
   let s = copilot#GetDisplayedSuggestion()
   if !empty(s.text)
