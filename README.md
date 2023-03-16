@@ -10,6 +10,14 @@ Copilot.vim is a Vim/Neovim plugin for GitHub Copilot.
 To learn more, visit
 [https://github.com/features/copilot](https://github.com/features/copilot).
 
+## This Fork
+
+This fork adds the ability to use shift-tab to accept only one line of
+the suggestion.
+
+Note: The only vimscript I've ever written before was my `.vimrc`. This
+function was implemented with ChatGPT. 😂
+
 ## Subscription
 
 GitHub Copilot requires a subscription.  It is free for verified students and
@@ -30,23 +38,23 @@ Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-for-addi
 
     * Vim, Linux/macOS:
 
-          git clone https://github.com/github/copilot.vim.git \
-            ~/.vim/pack/github/start/copilot.vim
+          git clone https://github.com/i40west/copilot.vim.git \
+            ~/.vim/pack/i40west/start/copilot.vim
 
     * Neovim, Linux/macOS:
 
-          git clone https://github.com/github/copilot.vim.git \
-            ~/.config/nvim/pack/github/start/copilot.vim
+          git clone https://github.com/i40west/copilot.vim.git \
+            ~/.config/nvim/pack/i40west/start/copilot.vim
 
     * Vim, Windows (PowerShell command):
 
-          git clone https://github.com/github/copilot.vim.git `
-            $HOME/vimfiles/pack/github/start/copilot.vim
+          git clone https://github.com/i40west/copilot.vim.git `
+            $HOME/vimfiles/pack/i40west/start/copilot.vim
 
     * Neovim, Windows (PowerShell command):
 
-          git clone https://github.com/github/copilot.vim.git `
-            $HOME/AppData/Local/nvim/pack/github/start/copilot.vim
+          git clone https://github.com/i40west/copilot.vim.git `
+            $HOME/AppData/Local/nvim/pack/i40west/start/copilot.vim
 
 4.  Start Neovim and invoke `:Copilot setup`.
 
