@@ -491,7 +491,7 @@ function! copilot#AcceptLine(...) abort
     call s:ClearPreview()
     let s:suggestion_text = first_line
     return repeat("\<Left>\<Del>", s.outdentSize) . repeat("\<Del>", s.deleteSize) .
-            \ "\<C-R>\<C-O>=" . string(escape(first_line, '\"')) . "\<CR>\<CR>"
+            \ "\<C-R>\<C-O>=copilot#TextQueuedForInsertion()\<CR>"
   endif
   let default = get(g:, 'copilot_tab_fallback', pumvisible() ? "\<C-N>" : "\t")
   if !a:0
