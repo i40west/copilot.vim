@@ -92,9 +92,10 @@ function! s:NodeVersionWarning() abort
   if exists('s:agent.node_version') && s:agent.node_version =~# '^16\.'
     echohl WarningMsg
     echo "Warning: Node.js 16 is approaching end of life and support will be dropped in a future release of copilot.vim."
-    if get(g:, 'copilot_node_command', 'node') isnot# 'node'
-      echo "g:copilot_node_command is set to a non-default value. Consider removing it from your" (has('nvim') ? 'Neovim' : 'Vim') "configuration."
-    endif
+    echohl NONE
+  elseif exists('s:agent.node_version_warning')
+    echohl WarningMsg
+    echo 'Warning:' s:agent.node_version_warning
     echohl NONE
   endif
 endfunction
@@ -172,8 +173,11 @@ function! s:BufferDisabled() abort
     return empty(b:copilot_enabled) ? 4 : 0
   endif
   let short = empty(&l:filetype) ? '.' : split(&l:filetype, '\.', 1)[0]
-  let config = get(g:, 'copilot_filetypes', {})
-  if type(config) == v:t_dict && has_key(config, &l:filetype)
+  let config = {}
+  if type(get(g:, 'copilot_filetypes')) == v:t_dict
+    let config = g:copilot_filetypes
+  endif
+  if has_key(config, &l:filetype)
     return empty(config[&l:filetype])
   elseif has_key(config, short)
     return empty(config[short])
@@ -412,7 +416,7 @@ function! copilot#Schedule(...) abort
   if !s:has_ghost_text || !copilot#Enabled() || !copilot#IsMapped()
     return
   endif
-  let delay = a:0 ? a:1 : get(g:, 'copilot_idle_delay', 75)
+  let delay = a:0 ? a:1 : get(g:, 'copilot_idle_delay', 15)
   let g:_copilot_timer = timer_start(delay, function('s:Trigger', [bufnr('')]))
 endfunction
 
@@ -484,11 +488,18 @@ function! copilot#Accept(...) abort
   let s = copilot#GetDisplayedSuggestion()
   if !empty(s.text)
     unlet! b:_copilot
-    call copilot#Request('notifyAccepted', {'uuid': s.uuid})
+    let text = ''
+    if a:0 > 1
+      let text = substitute(matchstr(s.text, "\n*" . '\%(' . a:2 .'\)'), "\n*$", '', '')
+    endif
+    if empty(text)
+      let text = s.text
+    endif
+    call copilot#Request('notifyAccepted', {'uuid': s.uuid, 'acceptedLength': copilot#doc#UTF16Width(text)})
     call s:ClearPreview()
-    let s:suggestion_text = s.text
+    let s:suggestion_text = text
     return repeat("\<Left>\<Del>", s.outdentSize) . repeat("\<Del>", s.deleteSize) .
-            \ "\<C-R>\<C-O>=copilot#TextQueuedForInsertion()\<CR>\<End>"
+            \ "\<C-R>\<C-O>=copilot#TextQueuedForInsertion()\<CR>" . (a:0 > 1 ? '' : "\<End>")
   endif
   let default = get(g:, 'copilot_tab_fallback', pumvisible() ? "\<C-N>" : "\t")
   if !a:0
@@ -506,6 +517,14 @@ function! copilot#Accept(...) abort
   endif
 endfunction
 
+function! copilot#AcceptWord(...) abort
+  return copilot#Accept(a:0 ? a:1 : '', '\%(\k\@!.\)*\k*')
+endfunction
+
+function! copilot#AcceptLine(...) abort
+  return copilot#Accept(a:0 ? a:1 : "\r", "[^\n]\\+")
+endfunction
+
 function! s:BrowserCallback(into, code) abort
   let a:into.code = a:code
 endfunction
@@ -513,12 +532,12 @@ endfunction
 function! copilot#Browser() abort
   if type(get(g:, 'copilot_browser')) == v:t_list
     return copy(g:copilot_browser)
+  elseif type(get(g:, 'browser_command')) == v:t_list
+    return copy(g:browser_command)
   elseif has('win32') && executable('rundll32')
     return ['rundll32', 'url.dll,FileProtocolHandler']
   elseif isdirectory('/private') && executable('/usr/bin/open')
     return ['/usr/bin/open']
-  elseif executable('gio')
-    return ['gio', 'open']
   elseif executable('xdg-open')
     return ['xdg-open']
   else
@@ -774,7 +793,7 @@ function! copilot#Command(line1, line2, range, bang, mods, arg) abort
   try
     let err = copilot#Agent().StartupError()
     if !empty(err)
-      return 'echo ' . string('Copilot: ' . string(err))
+      return 'echo ' . string('Copilot: ' . err)
     endif
     try
       let opts = copilot#Call('checkStatus', {'options': {'localChecksOnly': v:true}})
