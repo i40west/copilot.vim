@@ -1,5 +1,9 @@
 # Copilot.vim
 
+> [!WARNING]
+> [copilot.lua](https://github.com/zbirenbaum/copilot.lua) is the way to go now.
+> I am no longer using or keeping up with this fork, so don't use it.
+
 GitHub Copilot uses OpenAI Codex to suggest code and entire functions in
 real-time right from your editor.  Trained on billions of lines of public
 code, GitHub Copilot turns natural language prompts including comments and
